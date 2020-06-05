@@ -1,6 +1,5 @@
 import numpy as np
 
-
 def initialize(num_inds, num_params, domain=[0, 2], real_valued=False):
     lower_bound = domain[0]
     upper_bound = domain[1]
