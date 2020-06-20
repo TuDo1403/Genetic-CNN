@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 import numpy as np
-import fitness_function_dictionary as f_dict
 from matplotlib import cm
 
 def scatter_plot(ax_lim, ax, raw_data, title='', hold=True):

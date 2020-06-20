@@ -1,7 +1,8 @@
 import numpy as np
+import pandas as pd
 
-from GA import *
-from plot import *
+from GA_optimizers.GA import *
+from utils.plot import *
 
 def variate(pop, crossover_mode):
     (num_inds, num_params) = pop.shape
@@ -20,7 +21,7 @@ def variate(pop, crossover_mode):
         else:
             for j in range(num_params):
                 if np.random.randint(low=0, high=2) == 1:
-                    offspring1[j], offspring2[j] = offs2[j], offs1[j]
+                    offs1[j], offs2[j] = offs2[j], offs1[j]
 
         offsprings.append(offs1)
         offsprings.append(offs2)
@@ -46,7 +47,7 @@ def tournament_selection(f_pool, tournament_size, selection_size, maximize=False
 
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-def optimize(params, plot=False, print_scr=True):
+def optimize(params, plot=False, print_scr=True, log=False):
     """
 
     """
@@ -59,18 +60,21 @@ def optimize(params, plot=False, print_scr=True):
     maximize = params['maximize']
     crossover_mode = params['cm']
 
-    f_func = params['f']    # Dictionary of fitness function data
-    real_valued = f_func['real valued']
-    (lower_bound, upper_bound) = f_func['D']
-    num_params = f_func['d']
+    f_dict = params['f']    # Dictionary of fitness function data
+    real_valued = f_dict['real valued']
+    (lower_bound, upper_bound) = f_dict['D']
+    num_params = f_dict['d']
 
     # Plot search space
     plottable = plot and num_params == 2
     if plottable:
-        data = get_plot_data(f_func)
+        data = get_plot_data(f_dict)
         fig, ax = plt.subplots()
         if plottable and plot == 2:
             ax = Axes3D(fig)
+
+    # Create log file
+    log_data = []
 
     # Initialize
     comparer = np.argmax if maximize else np.argmin
@@ -79,7 +83,7 @@ def optimize(params, plot=False, print_scr=True):
     pop = initialize(num_inds, num_params, 
                      domain=[lower_bound, upper_bound], 
                      real_valued=real_valued)
-    f_pop = evaluate(pop, f_func['function'])
+    f_pop = evaluate(pop, f_dict['function'])
     selection_size = len(pop)
     gen = 0
     num_f_func_calls = len(f_pop)
@@ -93,7 +97,7 @@ def optimize(params, plot=False, print_scr=True):
         offs = variate(pop, crossover_mode)
 
         # Evaluate
-        f_offs = evaluate(offs, f_func['function'])    
+        f_offs = evaluate(offs, f_dict['function'])    
         num_f_func_calls += len(f_offs)
 
         # Selection
@@ -110,34 +114,49 @@ def optimize(params, plot=False, print_scr=True):
         if print_scr and gen % 100 == 0:
             print('## Gen {}: {} (Fitness: {})'.format(gen, pop[comparer(f_pop)].reshape(1, -1), 
                                                        f_pop[comparer(f_pop)]))
+
+        if log and gen % 10 == 0:
+            idx_comparer = np.argmax if maximize else np.argmin
+            idx_invert_comparer = np.argmin if maximize else np.argmax
+            best_genome = pop[idx_comparer(f_pop)]
+            max_result, min_result = idx_comparer(f_pop), idx_invert_comparer(f_pop)
+            mean, std = f_pop.mean(), f_pop.std()
+            log_data.append([gen, max_result, min_result, mean, std, best_genome])
+
         if plottable:
             ax.clear()
             if plot == 1:
-                contour_plot(ax, data, f_func, hold=True)
+                contour_plot(ax, data, f_dict, hold=True)
                 ax_lim = (xlim, ylim) = ax.get_xlim(), ax.get_ylim()
                 scatter_plot(ax_lim, ax, pop, hold=True)
             else:
-                contour_3D(ax, data, f_func, hold=True)
+                contour_3D(ax, data, f_dict, hold=True)
                 ax_lim = (xlim, ylim, zlim) = ax.get_xlim3d(), ax.get_ylim3d(), ax.get_zlim3d()
                 scatter_3D(ax_lim, ax, pop, f_pop, hold=True)
             plt.pause(epsilon)
         #
 
     if plottable: 
-        plt.show() 
+        plt.show()
+
+    
 
     solution =  pop[comparer(f_pop)].reshape(1, -1).flatten()
     opt_sol_found = None
 
     optimize_goal = 'global maximum' if maximize else 'global minimum'
-    if type(f_func[optimize_goal]) != type(None):
+    if type(f_dict[optimize_goal]) != type(None):
         epsilon = 10**-5
-        diffs = np.abs(f_func[optimize_goal] - solution).sum(axis=1)
+        diffs = np.abs(f_dict[optimize_goal] - solution).sum(axis=1)
         opt_sol_found = len(np.where(diffs <= num_params*epsilon)[0]) != 0
 
     result = { 'solution' : solution, 
                'evaluate function calls' : num_f_func_calls, 
                'global optima found' : opt_sol_found }
+
+    if log:
+        dataframe = pd.DataFrame(data=log_data, columns=['Gen', 'Max', 'Min', 'Mean', 'Std', 'Best Structure'])
+        result['log data'] = dataframe
     return result
 
 

@@ -1,48 +1,106 @@
+import json
+
 import click
 
-from numpy import zeros, ones
-from data_dict import *
+import GA_optimizers.ECGA as ecga
+import GA_optimizers.PSO as pso
+import GA_optimizers.sGA as sga
+from arch_eval import evaluate_architecture
+from data_dict import load_data, datasets_dict
+from genetic_CNN import code_length_of
 
-import PSO as pso
-import ECGA as ecga
-import sGA as sga
+opt_dict = {'pso': pso, 'ecga': ecga, 'sga': sga}
 
-optimizers_dict = { 'pso' : pso, 'ecga' : ecga, 'sga' : sga }
-data_dict = { 'cifar10' : cifar10_dict}
 
-# @click.option('--maximize', '-max', default=False, type=bool, 
-            # help='Define whether to maximize or minimize the output')
-# @click.option('--function', '-f', required=True, type=str, 
-            # help='Choose which function to evaluate')
-# @click.option('--pop_shape', '-ps', default=(100, 2), type=(int, int), 
-#             help='Define initial population shape (N, d) (default value : (100, 2))')
-# @click.option('--plot', '-plt', default=0, type=click.IntRange(0, 3), 
-            # help='0 (no plot), 1 (2d plot), 2 (3d plot)')
-@click.command()
-@click.option('--optimizer', '-opt', required=True, type=str, 
-            help='Choose optimization method')
-@click.option('--nodes', '-n', required=True, nargs='--states', type=int)
-@click.option('--dataset', '-dt', required=True, type=str)
-@click.option('--num_inds', '-N', default=20, type=click.IntRange(20, 100))
-@click.option('--seed', '-s', default=1, type=int, 
-            help='Random seed for the random number generator (default value : 1)')
-@click.option('--gen', '-g', default=-1, type=int, 
-            help='Max generations to evaluate population (default value : -1)')
-@click.option('--tournament_size', '-ts', default=4, type=int, 
-            help='Define tournament size for some method')
-@click.option('--mode', type=str, 
-            help='Choose which mode in optimization method to use')
-@click.option('--print_scr', '-prnscr', default=True, type=bool, 
-            help='Print result to command line')
+def hyper_parameters(optimizer, epochs, num_filters, fc_nodes,
+                     drop_out, kernel, stride, pooling, pool_size):
+    hyper_params = {}
+    hyper_params['optimizer'] = optimizer
+    hyper_params['epochs'] = epochs
+    hyper_params['kernel size'] = (kernel, kernel)
+    hyper_params['strides'] = (stride, stride)
+    hyper_params['drop out'] = drop_out
+    hyper_params['pooling'] = pooling
+    hyper_params['filters'] = num_filters
+    hyper_params['fc units'] = fc_nodes
+    hyper_params['pool size'] = (pool_size, pool_size)
+
+    return hyper_params
+
+
+class Config(object):
+    def __init__(self):
+        self.dict = {}
+
+
+pass_config = click.make_pass_decorator(Config, ensure=True)
+
+
+@click.group()
+@click.option('--nodes', '-n', required=True, help='Number of nodes k for each stages S. Ex: [4,5]')
+@click.option('--dataset', '-dtset', required=True, type=click.Choice(datasets_dict.keys(), case_sensitive=False))
 @click.option('--network_optimizer', '-nn_opt', default='adam', type=str)
-@click.option('--epochs', 'e', default=5, type=click.IntRange(1, 20))
-@click.option('--batch_size', 'bs', default=64, type=int)
-def run(optimizer, nodes, dataset, seed, gen, 
-        tournament_size, mode, print_scr, num_inds):
+@click.option('--epochs', '-ep', default=10, type=int)
+@click.option('--num_filters', '-numf', default=8, type=int)
+@click.option('--fc_nodes', '-fc', default=128, type=int)
+@click.option('--kernel_size', '-ksize', default=5, type=int)
+@click.option('--pool_size', '-psize', default=2, type=int)
+@click.option('--stride', '-s', default=2, type=int)
+@click.option('--drop_out', '-do', default=0.5, type=click.FloatRange(0, 1))
+@click.option('--pooling', '-pool', default='max', type=click.Choice(['max', 'average', 'avg']))
+@pass_config
+def cnn_model(config, nodes, dataset, network_optimizer, epochs, pool_size,
+              kernel_size, stride, drop_out, pooling, num_filters, fc_nodes):
+    """ CNN model Config """
+    nodes = json.loads(nodes)
+    nodes = [int(node) for node in nodes]
+    hyper_params = hyper_parameters(network_optimizer, epochs, num_filters, fc_nodes,
+                                    drop_out, kernel_size, stride, pooling, pool_size)
+    data = load_data(dataset, image=True, small_data=True)
+    config.dict['nodes'] = nodes
+    config.dict['data'] = data
+    config.dict['hyper_params'] = hyper_params
 
-    params = optimizers_dict[optimizer].get_parameters(N=num_inds, s=seed, g=gen,
-                                                    mode=mode)
-    pass
+
+@cnn_model.command()
+@click.option('--optimizer', '-opt', required=True, type=click.Choice(opt_dict.keys(), case_sensitive=False),
+              help='Choose optimization method')
+@click.option('--seed', '-s', default=1, type=int,
+              help='Random seed for the random number generator (default value : 1)')
+@click.option('--gen', '-g', default=-1, type=int,
+              help='Max generations to evaluate population (default value : -1)')
+@click.option('--num_inds', '-N', default=20,
+              help='Number of genomes in population (default 20)')
+@click.option('--tsize', '-ts', default=4, type=int,
+              help='Define tournament size for some method')
+@click.option('--mode', '-m', type=str,
+              help='Choose which mode in optimization method to use')
+@click.option('--printscr', '-prnscr', default=True, type=bool,
+              help='Print result to command line')
+@click.option('--log', '-l', default=True, type=bool,
+              help='Log result to csv file')
+@pass_config
+def GA_config(config, optimizer, seed, gen, num_inds,
+              log, tsize, mode, printscr):
+    """ Genetic Algorithm Configuration """
+    f_func = evaluate_architecture(config.dict['nodes'], config.dict['hyper_params'],
+                                   config.dict['data'])
+    f_dict = {'name': 'architecture evaluate',
+              'd': sum(list(map(code_length_of, config.dict['nodes']))),
+              'D': (0, 2),
+              'real valued': False,
+              'multi dims': True,
+              'global maximum': None,
+              'global minimum': None,
+              'function': f_func}
+    params = opt_dict[optimizer].get_parameters(N=num_inds, s=seed, g=gen,
+                                                mode=mode, f=f_dict,
+                                                maximize=False, t_size=tsize)
+    result = opt_dict[optimizer].optimize(params, 0, printscr, log)
+    print(result)
+    if log:
+        result['log data'].to_csv('..\log_files\{}.csv'.format(optimizer))
+
 
 if __name__ == '__main__':
-    run()
+    cnn_model(['-n', '3', '4', '-dtset', 'cifar10', 'ga-model', '-opt', 'sga'])

@@ -1,7 +1,7 @@
 import numpy as np
 
-from GA import *
-from plot import *
+from GA_optimizers.GA import *
+from utils.plot import *
 
 from numpy import arange, newaxis
 def compute_minimum_description_length(pop, model):
@@ -57,8 +57,10 @@ def variate(pop, model):
     np.random.shuffle(indices)
 
     for i in range(0, num_inds, 2):
-        idx1, idx2 = indices[i], indices[i+1]
-        offs1, offs2 = pop[idx1].copy(), pop[idx2].copy()
+        idx1 = indices[i]
+        idx2 = indices[i+1]
+        offs1 = pop[idx1].copy()
+        offs2 = pop[idx2].copy()
 
         for group in model:
             if np.random.rand() < 0.5:
@@ -100,15 +102,15 @@ def optimize(params, plot=False, print_scr=False):
     seed = params['s']
     maximize = params['maximize']
 
-    f_func = params['f']    # Dictionary of fitness function data
-    real_valued = f_func['real valued']
-    (lower_bound, upper_bound) = f_func['D']
-    num_params = f_func['d']
+    f_dict = params['f']    # Dictionary of fitness function data
+    real_valued = f_dict['real valued']
+    (lower_bound, upper_bound) = f_dict['D']
+    num_params = f_dict['d']
 
     # Plot search space
     plottable = plot and num_params == 2
     if plottable:
-        data = get_plot_data(f_func)
+        data = get_plot_data(f_dict)
         fig, ax = plt.subplots()
         if plottable and plot == 2:
             ax = Axes3D(fig)
@@ -116,11 +118,11 @@ def optimize(params, plot=False, print_scr=False):
     # Initialize
     comparer = np.argmax if maximize else np.argmin
     np.random.seed(seed)
-    epsilon= 10**-5
+    epsilon = 10**-5
     pop = initialize(num_inds, num_params, 
                      domain=[lower_bound, upper_bound], 
                      real_valued=real_valued)
-    f_pop = evaluate(pop, f_func['function'])
+    f_pop = evaluate(pop, f_dict['function'])
     pop_model = [[group] for group in np.arange(num_params)]
     selection_size = len(pop)
     gen = 0
@@ -143,7 +145,7 @@ def optimize(params, plot=False, print_scr=False):
         offs = variate(pop, pop_model)
 
         # Evaluate
-        f_offs = evaluate(offs, f_func['function'])    
+        f_offs = evaluate(offs, f_dict['function'])    
         num_f_func_calls += len(f_offs)
 
         # Selection
@@ -164,11 +166,11 @@ def optimize(params, plot=False, print_scr=False):
         if plottable:
             ax.clear()
             if plot == 1:
-                contour_plot(ax, data, f_func, hold=True)
+                contour_plot(ax, data, f_dict, hold=True)
                 ax_lim = (xlim, ylim) = ax.get_xlim(), ax.get_ylim()
                 scatter_plot(ax_lim, ax, pop, hold=True)
             else:
-                contour_3D(ax, data, f_func, hold=True)
+                contour_3D(ax, data, f_dict, hold=True)
                 ax_lim = (xlim, ylim, zlim) = ax.get_xlim3d(), ax.get_ylim3d(), ax.get_zlim3d()
                 scatter_3D(ax_lim, ax, pop, f_pop, hold=True)
             plt.pause(epsilon)
@@ -181,12 +183,12 @@ def optimize(params, plot=False, print_scr=False):
     opt_sol_found = None
 
     optimize_goal = 'global maximum' if maximize else 'global minimum'
-    if type(f_func[optimize_goal]) != type(None):
-        diffs = np.abs(f_func[optimize_goal] - solution).sum(axis=1)
+    if type(f_dict[optimize_goal]) != type(None):
+        diffs = np.abs(f_dict[optimize_goal] - solution).sum(axis=1)
         opt_sol_found = len(np.where(diffs <= num_params*epsilon)[0]) != 0
 
     result = { 'solution' : solution, 
-               'model' : model,
+               'model' : pop_model,
                'evaluate function calls' : num_f_func_calls, 
                'global optima found' : opt_sol_found }
     return result

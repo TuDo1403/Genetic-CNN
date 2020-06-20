@@ -1,30 +1,22 @@
-import numpy as np
+from genetic_CNN import genetic_model
 
-from CNN import *
-from data import load_data
 
-def evaluate_model(code, arch, epochs, batch_size, data):
+def evaluate_model(code, arch, nn_dict, data):
     arch['code'] = code
-    (x_train, y_train), (x_test, y_test), classes = data
-    model = genetic_model(arch, x_train.shape[1:], classes)
-    model.compile(loss='categorical_crossentropy', 
-                optimizer='adam', metrics=['arccuracy'])
-    model.fit(x_train, y_train, epochs=epochs, batch_size=batch_size,
-            validation_data=(x_test, y_test))
-    [_, fitness] = model.evaluate(x_test, y_test, batch_size=128)
+    [(x_train, y_train), (x_test, y_test), classes] = data
+
+    model = genetic_model(arch, nn_dict, x_train.shape[1:], classes)
+    model.fit(x=x_train, y=y_train, epochs=nn_dict['epochs'],
+              validation_data=(x_test, y_test))
+    [_, fitness] = model.evaluate(x_test, y_test)
     return fitness
+
 
 def evaluate_table(ind):
     pass
 
-def evaluate_architecture(nodes, epochs, batch_size, dataset):
-    state_names = ['S' + str(i) for i in range(1, len(nodes)+1)]
-    architecture = {}
-    architecture['states'] = list(zip(state_names, nodes))
-    data = load_data(dataset, normalize_input=True)
-    return lambda code : evaluate_model(code, architecture, 
-                                        epochs, batch_size, data)
-    pass
 
-def evaluate_model():
-    pass
+def evaluate_architecture(nodes, nn_dict, data):
+    stage_names = ['S' + str(i) for i in range(1, len(nodes) + 1)]
+    architecture = {'stages': list(zip(stage_names, nodes))}
+    return lambda code: evaluate_model(code, architecture, nn_dict, data)

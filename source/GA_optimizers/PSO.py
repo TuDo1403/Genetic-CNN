@@ -1,7 +1,7 @@
 import numpy as np
 
-from GA import *
-from plot import *
+from GA_optimizers.GA import *
+from utils.plot import *
 
 np.set_printoptions(suppress=True)  # Prevent numpy exponential notation on print, default False
 
@@ -66,15 +66,15 @@ def optimize(params, plot=0, print_scr=False):
 
     selection_mode = params['sm']
 
-    f_func = params['f']    # Dictionary of fitness function data
-    num_params = f_func['d']
-    (lower_bound, upper_bound) = f_func['D']
-    real_valued = f_func['real valued']
+    f_dict = params['f']    # Dictionary of fitness function data
+    num_params = f_dict['d']
+    (lower_bound, upper_bound) = f_dict['D']
+    real_valued = f_dict['real valued']
 
     # Plot search space
     plottable = plot and num_params == 2
     if plottable:
-        data = get_plot_data(f_func)
+        data = get_plot_data(f_dict)
         fig, ax = plt.subplots()
         if plottable and plot == 2:
             ax = Axes3D(fig)
@@ -100,8 +100,8 @@ def optimize(params, plot=0, print_scr=False):
             break
 
         # Evaluate
-        f_P = evaluate(P, f_func['function'])
-        f_p = evaluate(p, f_func['function'])
+        f_P = evaluate(P, f_dict['function'])
+        f_p = evaluate(p, f_dict['function'])
 
         num_f_func_calls += len(f_P) * 2
 
@@ -125,11 +125,11 @@ def optimize(params, plot=0, print_scr=False):
         if plottable:
             ax.clear()
             if plot == 1:
-                contour_plot(ax, data, f_func, hold=True)
+                contour_plot(ax, data, f_dict, hold=True)
                 ax_lim = (xlim, ylim) = ax.get_xlim(), ax.get_ylim()
                 scatter_plot(ax_lim, ax, P, hold=True)
             else:
-                contour_3D(ax, data, f_func, hold=True)
+                contour_3D(ax, data, f_dict, hold=True)
                 ax_lim = (xlim, ylim, zlim) = ax.get_xlim3d(), ax.get_ylim3d(), ax.get_zlim3d()
                 scatter_3D(ax_lim, ax, P, f_P, hold=True)
             plt.pause(epsilon)
@@ -142,8 +142,8 @@ def optimize(params, plot=0, print_scr=False):
     opt_sol_found = None
 
     optimize_goal = 'global maximum' if maximize else 'global minimum'
-    if type(f_func[optimize_goal]) != type(None):
-        diffs = np.abs(f_func[optimize_goal] - solution).sum(axis=1)
+    if type(f_dict[optimize_goal]) != type(None):
+        diffs = np.abs(f_dict[optimize_goal] - solution).sum(axis=1)
         opt_sol_found = len(np.where(diffs <= num_params*epsilon)[0]) != 0
 
     result = { 'solution' : solution, 
