@@ -73,8 +73,10 @@ def optimize(params, plot=False, print_scr=True, log=False):
         if plottable and plot == 2:
             ax = Axes3D(fig)
 
-    # Create log file
-    log_data = []
+    # Write log file header
+    if log:
+        with open('../log/{}.txt'.format('sga'), 'w+') as f:
+            f.write('{},{},{},{},{},{}'.format('gen', 'max result', 'min result', 'mean', 'std', 'best genome'))
 
     # Initialize
     comparer = np.argmax if maximize else np.argmin
@@ -115,13 +117,14 @@ def optimize(params, plot=False, print_scr=True, log=False):
             print('## Gen {}: {} (Fitness: {})'.format(gen, pop[comparer(f_pop)].reshape(1, -1), 
                                                        f_pop[comparer(f_pop)]))
 
-        if log and gen % 10 == 0:
+        if log:
             idx_comparer = np.argmax if maximize else np.argmin
             idx_invert_comparer = np.argmin if maximize else np.argmax
             best_genome = pop[idx_comparer(f_pop)]
             max_result, min_result = idx_comparer(f_pop), idx_invert_comparer(f_pop)
             mean, std = f_pop.mean(), f_pop.std()
-            log_data.append([gen, max_result, min_result, mean, std, best_genome])
+            with open('../log/{}.txt'.format('sga'), 'a+') as f:
+                f.write('{},{},{},{},{},{}'.format(gen, max_result, min_result, mean, std, best_genome))
 
         if plottable:
             ax.clear()
@@ -154,9 +157,6 @@ def optimize(params, plot=False, print_scr=True, log=False):
                'evaluate function calls' : num_f_func_calls, 
                'global optima found' : opt_sol_found }
 
-    if log:
-        dataframe = pd.DataFrame(data=log_data, columns=['Gen', 'Max', 'Min', 'Mean', 'Std', 'Best Structure'])
-        result['log data'] = dataframe
     return result
 
 

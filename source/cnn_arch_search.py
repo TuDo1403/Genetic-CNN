@@ -98,9 +98,3 @@ def GA_config(config, optimizer, seed, gen, num_inds,
                                                 maximize=False, t_size=tsize)
     result = opt_dict[optimizer].optimize(params, 0, printscr, log)
     print(result)
-    if log:
-        result['log data'].to_csv('..\log_files\{}.csv'.format(optimizer))
-
-
-if __name__ == '__main__':
-    cnn_model(['-n', '3', '4', '-dtset', 'cifar10', 'ga-model', '-opt', 'sga'])
