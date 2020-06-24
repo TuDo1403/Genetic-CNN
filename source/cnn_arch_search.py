@@ -56,7 +56,7 @@ def cnn_model(config, nodes, dataset, network_optimizer, epochs, pool_size,
     nodes = [int(node) for node in nodes]
     hyper_params = hyper_parameters(network_optimizer, epochs, num_filters, fc_nodes,
                                     drop_out, kernel_size, stride, pooling, pool_size)
-    data = load_data(dataset, image=True, small_data=True)
+    data = load_data(dataset, image=True, small_data=False)
     config.dict['nodes'] = nodes
     config.dict['data'] = data
     config.dict['hyper_params'] = hyper_params
@@ -100,7 +100,3 @@ def GA_config(config, optimizer, seed, gen, num_inds,
     print(result)
     if log:
         result['log data'].to_csv('..\log_files\{}.csv'.format(optimizer))
-
-
-if __name__ == '__main__':
-    cnn_model(['-n', '3', '4', '-dtset', 'cifar10', 'ga-model', '-opt', 'sga'])
