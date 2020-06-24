@@ -10,13 +10,12 @@ cifar10_dict = {'name': 'cifar10',
                 'data': cifar10.load_data()
                 }
 
-# fashion_mnist_dict = {'name': 'fashion_mnist',
-#                       'classes': 10,
-#                       'data': fashion_mnist.load_data()
-#                       }
+fashion_mnist_dict = {'name': 'fashion_mnist',
+                      'classes': 10,
+                      'data': fashion_mnist.load_data()
+                      }
 
-# datasets_dict = {'cifar10': cifar10_dict, 'fashion_mnist': fashion_mnist_dict}
-datasets_dict = {'cifar10': cifar10_dict}
+datasets_dict = {'cifar10': cifar10_dict, 'fashion_mnist': fashion_mnist_dict}
 
 def load_data(name, image=True, small_data=False):
     data_dict = datasets_dict[name]
@@ -40,10 +39,8 @@ def load_data(name, image=True, small_data=False):
         num_train, num_test = x_train.shape[0], x_test.shape[0]
         train_indices, test_indices = arange(num_train), arange(num_test)
         shuffle(train_indices), shuffle(test_indices)
-        # subsets_train = train_indices[: num_train // 10]
-        # subsets_test = test_indices[: num_test // 10]
-        subsets_train = train_indices[: num_train // 500]
-        subsets_test = test_indices[: num_test // 20]
+        subsets_train = train_indices[: num_train // 10]
+        subsets_test = test_indices[: num_test // 10]
 
         return [(x_train[subsets_train], y_train[subsets_train]),
                 (x_test[subsets_test], y_test[subsets_test]), classes]
