@@ -10,12 +10,13 @@ cifar10_dict = {'name': 'cifar10',
                 'data': cifar10.load_data()
                 }
 
-fashion_mnist_dict = {'name': 'fashion_mnist',
-                      'classes': 10,
-                      'data': fashion_mnist.load_data()
-                      }
+# fashion_mnist_dict = {'name': 'fashion_mnist',
+#                       'classes': 10,
+#                       'data': fashion_mnist.load_data()
+#                       }
 
-datasets_dict = {'cifar10': cifar10_dict, 'fashion_mnist': fashion_mnist_dict}
+# datasets_dict = {'cifar10': cifar10_dict, 'fashion_mnist': fashion_mnist_dict}
+datasets_dict = {'cifar10': cifar10_dict}
 
 def load_data(name, image=True, small_data=False):
     data_dict = datasets_dict[name]

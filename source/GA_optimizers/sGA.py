@@ -118,10 +118,8 @@ def optimize(params, plot=False, print_scr=True, log=False):
                                                        f_pop[comparer(f_pop)]))
 
         if log:
-            idx_comparer = np.argmax if maximize else np.argmin
-            idx_invert_comparer = np.argmin if maximize else np.argmax
-            best_genome = pop[idx_comparer(f_pop)]
-            max_result, min_result = idx_comparer(f_pop), idx_invert_comparer(f_pop)
+            best_genome = pop[comparer(f_pop)]
+            max_result, min_result = f_pop.max(), f_pop.min()
             mean, std = f_pop.mean(), f_pop.std()
             with open('../log/{}.txt'.format('sga'), 'a+') as f:
                 f.write('{},{},{},{},{},{}'.format(gen, max_result, min_result, mean, std, best_genome))

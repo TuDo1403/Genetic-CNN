@@ -87,7 +87,7 @@ def GA_config(config, optimizer, seed, gen, num_inds,
                                    config.dict['data'])
     f_dict = {'name': 'architecture evaluate',
               'd': sum(list(map(code_length_of, config.dict['nodes']))),
-              'D': (0, 2),
+              'D': (0, 1),
               'real valued': False,
               'multi dims': True,
               'global maximum': None,

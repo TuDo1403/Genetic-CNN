@@ -54,6 +54,8 @@ def genetic_model(architecture, hyper_params,
     code = architecture['code'][:end_idx]
     X = do_something(X, code, nodes, hyper_params['filters'],
                      hyper_params['kernel size'])
+    X = Pool(pool_size=hyper_params['pool size'],
+                 strides=hyper_params['strides'], padding='valid')(X)
     for i in range(1, len(stages)):
         _, nodes = stages[i]
         start_idx = code_length_of(stages[i - 1][1])
@@ -76,25 +78,41 @@ def genetic_model(architecture, hyper_params,
                   optimizer=hyper_params['optimizer'], metrics=['accuracy'])
     return model
 
-# architecture = { 'stages' : [('Stage1', 4), ('Stage2', 5)], 
-#                 'code' : np.array([1, 0, 0, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1]),
-#                 }
+import timeit
+from keras.datasets import cifar10
+from keras.utils import to_categorical
+architecture = { 'stages' : [('Stage1', 3), ('Stage2', 5)], 
+                 'code' : np.array([0, 0, 1, 1, 1, 0, 1, 0, 0, 1, 1, 0, 1]),
+                }
+hyper_params = { 'optimizer' : 'adam',
+                 'drop out' : 0.5,
+                 'epochs' : 20,
+                 'kernel size' : (5, 5),
+                 'pool size' : 2,
+                 'strides' : 2,
+                 'filters' : 20,
+                 'fc units': 500,
+                 'pooling' : 'max'}
 
-# (x_train, y_train), (x_test, y_test) = cifar10.load_data()
-# # Convert class vectors to binary class matrices.
-# num_classes = 10
-# y_train = to_categorical(y_train, num_classes)
-# y_test = to_categorical(y_test, num_classes)
+(x_train, y_train), (x_test, y_test) = cifar10.load_data()
+# Convert class vectors to binary class matrices.
+num_classes = 10
+y_train = to_categorical(y_train, num_classes)
+y_test = to_categorical(y_test, num_classes)
 
-# # Data normalization
-# x_train = x_train.astype('float32')
-# x_test = x_test.astype('float32')
-# x_train /= 255
-# x_test /= 255
+# Data normalization
+x_train = x_train.astype('float32')
+x_test = x_test.astype('float32')
+x_train /= 255
+x_test /= 255
 
 
-# model = genetic_model(architecture, drop_out=0.5, pool_mode='max',
-#                         input_shape=x_train.shape[1:], classes=num_classes)
-# model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
-# model.summary()
-# model.fit(x=x_train, y=y_train, epochs=2, validation_data=(x_test, y_test))
+model = genetic_model(architecture, hyper_params,
+                     input_shape=x_train.shape[1:], classes=num_classes)
+model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+model.summary()
+#model.save('./models/sga')
+start = timeit.default_timer()
+model.fit(x=x_train, y=y_train, epochs=20, validation_data=(x_test, y_test))
+end = timeit.default_timer()
+print('Elapsed time: {}'.format(end - start))
