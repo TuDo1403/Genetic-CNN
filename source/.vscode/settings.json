@@ -1,5 +1,9 @@
 {
+<<<<<<< HEAD
     "python.pythonPath": "/home/tudo/anaconda3/envs/tf_gpu/bin/python",
     "python.linting.pylintEnabled": true,
     "python.linting.enabled": true
+=======
+    "python.pythonPath": "/home/utmod/anaconda3/envs/tf_gpu/bin/python"
+>>>>>>> 8459145967628071d8d67f3188571aac77188633
 }

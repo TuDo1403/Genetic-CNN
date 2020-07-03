@@ -73,8 +73,10 @@ def optimize(params, plot=False, print_scr=True, log=False):
         if plottable and plot == 2:
             ax = Axes3D(fig)
 
-    # Create log file
-    log_data = []
+    # Write log file header
+    if log:
+        with open('../log/{}.txt'.format('sga'), 'w+') as f:
+            f.write('{},{},{},{},{},{}\n'.format('gen', 'max result', 'min result', 'mean', 'std', 'best genome'))
 
     # Initialize
     comparer = np.argmax if maximize else np.argmin
@@ -111,17 +113,16 @@ def optimize(params, plot=False, print_scr=True, log=False):
         #
 
         # Visualize / log result
-        if print_scr and gen % 100 == 0:
-            print('## Gen {}: {} (Fitness: {})'.format(gen, pop[comparer(f_pop)].reshape(1, -1), 
-                                                       f_pop[comparer(f_pop)]))
-
-        if log and gen % 10 == 0:
-            idx_comparer = np.argmax if maximize else np.argmin
-            idx_invert_comparer = np.argmin if maximize else np.argmax
-            best_genome = pop[idx_comparer(f_pop)]
-            max_result, min_result = idx_comparer(f_pop), idx_invert_comparer(f_pop)
+        if print_scr or log:
+            best_genome = pop[comparer(f_pop)]
+            max_accuracy, min_accuracy = f_pop.max(), f_pop.min()
             mean, std = f_pop.mean(), f_pop.std()
-            log_data.append([gen, max_result, min_result, mean, std, best_genome])
+            if print_scr:
+                print('Gen {}: best architecture : {} - accuracy (max/min) : {}/{} - mean/std : {}/{}'.format(gen, best_genome.reshape(1, -1)[0],
+                                                                                                        max_accuracy, min_accuracy, mean, std))
+            if log:
+                with open('../log/{}.txt'.format('sga'), 'a+') as f:
+                    f.write('{},{},{},{},{},{}\n'.format(gen, max_accuracy, min_accuracy, mean, std, best_genome))
 
         if plottable:
             ax.clear()
@@ -154,9 +155,6 @@ def optimize(params, plot=False, print_scr=True, log=False):
                'evaluate function calls' : num_f_func_calls, 
                'global optima found' : opt_sol_found }
 
-    if log:
-        dataframe = pd.DataFrame(data=log_data, columns=['Gen', 'Max', 'Min', 'Mean', 'Std', 'Best Structure'])
-        result['log data'] = dataframe
     return result
 
 

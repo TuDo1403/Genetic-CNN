@@ -87,7 +87,7 @@ def GA_config(config, optimizer, seed, gen, num_inds,
                                    config.dict['data'])
     f_dict = {'name': 'architecture evaluate',
               'd': sum(list(map(code_length_of, config.dict['nodes']))),
-              'D': (0, 2),
+              'D': (0, 1),
               'real valued': False,
               'multi dims': True,
               'global maximum': None,
@@ -95,8 +95,6 @@ def GA_config(config, optimizer, seed, gen, num_inds,
               'function': f_func}
     params = opt_dict[optimizer].get_parameters(N=num_inds, s=seed, g=gen,
                                                 mode=mode, f=f_dict,
-                                                maximize=False, t_size=tsize)
+                                                maximize=True, t_size=tsize)
     result = opt_dict[optimizer].optimize(params, 0, printscr, log)
     print(result)
-    if log:
-        result['log data'].to_csv('..\log_files\{}.csv'.format(optimizer))

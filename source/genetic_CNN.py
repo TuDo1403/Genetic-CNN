@@ -54,6 +54,8 @@ def genetic_model(architecture, hyper_params,
     code = architecture['code'][:end_idx]
     X = do_something(X, code, nodes, hyper_params['filters'],
                      hyper_params['kernel size'])
+    X = Pool(pool_size=hyper_params['pool size'],
+                 strides=hyper_params['strides'], padding='valid')(X)
     for i in range(1, len(stages)):
         _, nodes = stages[i]
         start_idx = code_length_of(stages[i - 1][1])

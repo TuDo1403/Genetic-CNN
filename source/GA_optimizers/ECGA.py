@@ -90,7 +90,7 @@ def tournament_selection(f_pool, tournament_size, selection_size, maximize=False
 
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-def optimize(params, plot=False, print_scr=False):
+def optimize(params, plot=False, print_scr=False, log=False):
     """
 
     """
@@ -114,6 +114,11 @@ def optimize(params, plot=False, print_scr=False):
         fig, ax = plt.subplots()
         if plottable and plot == 2:
             ax = Axes3D(fig)
+
+    # Write log file header
+    if log:
+        with open('../log/{}.txt'.format('ecga'), 'w+') as f:
+            f.write('{},{},{},{},{},{}\n'.format('gen', 'max result', 'min result', 'mean', 'std', 'best genome'))
 
     # Initialize
     comparer = np.argmax if maximize else np.argmin
@@ -160,9 +165,16 @@ def optimize(params, plot=False, print_scr=False):
 
 
         # Visualize / log result
-        if print_scr and gen % 100 == 0:
-            print('## Gen {}: {} (Fitness: {})'.format(gen, pop[comparer(f_pop)].reshape(1, -1), 
-                                                       f_pop[comparer(f_pop)]))
+        if print_scr or log:
+            best_genome = pop[comparer(f_pop)]
+            max_accuracy, min_accuracy = f_pop.max(), f_pop.min()
+            mean, std = f_pop.mean(), f_pop.std()
+            if print_scr:
+                print('Gen {}: best architecture : {} - accuracy (max/min) : {}/{} - mean/std : {}/{}'.format(gen, best_genome.reshape(1, -1)[0],
+                                                                                                        max_accuracy, min_accuracy, mean, std))
+            if log:
+                with open('../log/{}.txt'.format('ecga'), 'a+') as f:
+                    f.write('{},{},{},{},{},{}\n'.format(gen, max_accuracy, min_accuracy, mean, std, best_genome))
         if plottable:
             ax.clear()
             if plot == 1:

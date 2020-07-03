@@ -1,0 +1,1 @@
+arch-search -n [3,5] -dtset fashion_mnist -fc 500 -numf 20 -ep 20 ga-config -opt sga -g 50 -N 20 -l True -prnscr True &> sga.txt &

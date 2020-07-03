@@ -17,7 +17,6 @@ fashion_mnist_dict = {'name': 'fashion_mnist',
 
 datasets_dict = {'cifar10': cifar10_dict, 'fashion_mnist': fashion_mnist_dict}
 
-
 def load_data(name, image=True, small_data=False):
     data_dict = datasets_dict[name]
     classes = data_dict['classes']
