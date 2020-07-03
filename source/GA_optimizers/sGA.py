@@ -113,9 +113,19 @@ def optimize(params, plot=False, print_scr=True, log=False):
         #
 
         # Visualize / log result
+<<<<<<< HEAD
         if print_scr or log:
             best_genome = pop[comparer(f_pop)]
             max_accuracy, min_accuracy = f_pop.max(), f_pop.min()
+=======
+        if print_scr and gen % 100 == 0:
+            print('## Gen {}: {} (Fitness: {})'.format(gen, pop[comparer(f_pop)].reshape(1, -1), 
+                                                       f_pop[comparer(f_pop)]))
+
+        if log:
+            best_genome = pop[comparer(f_pop)]
+            max_result, min_result = f_pop.max(), f_pop.min()
+>>>>>>> 363e80ec181653310f85dcbca99288c07200e9d6
             mean, std = f_pop.mean(), f_pop.std()
             if print_scr:
                 print('Gen {}: best architecture : {} - accuracy (max/min) : {}/{} - mean/std : {}/{}'.format(gen, best_genome.reshape(1, -1)[0],
