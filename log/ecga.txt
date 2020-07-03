@@ -1,0 +1,1 @@
+gen,max result,min result,mean,std,best genome

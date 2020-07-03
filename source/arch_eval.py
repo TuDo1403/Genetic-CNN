@@ -7,7 +7,7 @@ def evaluate_model(code, arch, nn_dict, data):
 
     model = genetic_model(arch, nn_dict, x_train.shape[1:], classes)
     model.fit(x=x_train, y=y_train, epochs=nn_dict['epochs'],
-              validation_data=(x_test, y_test), verbose=0)
+              validation_data=(x_test, y_test), verbose=1)
     [_, fitness] = model.evaluate(x_test, y_test)
     return fitness
 
